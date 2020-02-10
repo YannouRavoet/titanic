@@ -1,9 +1,9 @@
-from utils import import_data
+from utils import import_data, data_wrangling
 import matplotlib.pyplot as plt
 import numpy as np
 #see https://www.youtube.com/watch?v=fS70iptz-XU - Predicting Titanic Survivors with Machine Learning
 def plot_basics(train_data):
-    fig = plt.figure(figsize=(18,6))
+    plt.figure(figsize=(18,6))
     #Survived percentages
     plt.subplot2grid((3,3),(0,0))
     train_data.Survived.value_counts(normalize=True).plot.bar(alpha=0.5)
@@ -15,7 +15,7 @@ def plot_basics(train_data):
     plt.title('Age wrt Survived')
     #Passenger Class
     plt.subplot2grid((3,3),(0,2))
-    train_data.Pclass.value_counts(normalize=True).plot.bar(alpha=0.5)
+    train_data.Pclass.value_counts(normalize=True).sort_index().plot.bar(alpha=0.5)
     plt.xticks(rotation='horizontal')
     plt.title('Passenger Class Distribution')
     #Passenger Class wrt Age
@@ -112,5 +112,6 @@ def plot_gender(train_data):
 
 if __name__ == "__main__":
     train_data, test_data = import_data()
+    #train_data, test_data = data_wrangling(train_data, test_data)
     plot_basics(train_data)
     plot_gender(train_data)
