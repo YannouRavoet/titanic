@@ -16,7 +16,7 @@ def data_wrangling(train_data, test_data):
     train_data = train_data.fillna({"Age":train_data.groupby('Sex')["Age"].transform("median"), "Fare":train_data.groupby('Pclass')["Fare"].transform("median"), "Embarked":'S'})
     test_data = test_data.fillna({"Age":test_data.groupby('Sex')["Age"].transform("median"), "Fare":test_data.groupby('Pclass')["Fare"].transform("median"), "Embarked":'S'})
     #Drop PassengerId in train_data
-    train_data.drop('PassengerId', axis=1, inplace=True)
+    #train_data.drop('PassengerId', axis=1, inplace=True)
     for dataset in [train_data, test_data]:
         #Age binning
         dataset['AgeBin'] = 0
@@ -39,11 +39,25 @@ def data_wrangling(train_data, test_data):
         familysize_distribution = {1: 0, 2: 0.4, 3: 0.8, 4: 1.2, 5: 1.6, 6: 2, 7: 2.4, 8: 2.8, 9: 3.2, 10: 3.6, 11:4}
         dataset['FamilySize'] = dataset['SibSp'] + dataset['Parch'] +1
         dataset['FamilySize'] = dataset['FamilySize'].map(familysize_distribution)
+        #create Surname column
+        dataset['Surname'] = dataset.Name.str.split(",", n=1, expand=True)[0]
         #drop Ticket and Name column
         dataset.drop(['Name', 'Ticket'], axis=1, inplace=True)
         #Sex, Embarked to numbers
         dataset['Sex'] = dataset['Sex'].map({'male':0, 'female':1})
         dataset['Embarked'] = dataset['Embarked'].map({'S':0, 'C':1, 'Q':2})
+    #create FamilyWipe
+    train_data["FamilyWiped"] = 0
+    train_data.loc[ train_data.groupby("Surname")["Survived"].transform("sum") == 0, "FamilyWiped"] = 1
+    for i, row in test_data.iterrows():
+        train_entry = train_data.loc[train_data["Surname"] == row["Surname"]]["FamilyWiped"]
+        test_data.at[i,'FamilyWiped'] = train_entry.values[0] if not train_entry.empty else 0
+    #create FamilySurvived
+    train_data["FamilySurvived"] = 0
+    train_data.loc [ train_data.groupby("Surname")["Survived"].transform("sum") == train_data.groupby("Surname")["Survived"].transform("count"), "FamilySurvived"] = 1
+    for i, row in test_data.iterrows():
+        train_entry = train_data.loc[train_data["Surname"] == row["Surname"]]["FamilySurvived"]
+        test_data.at[i,'FamilySurvived'] = train_entry.values[0] if not train_entry.empty else 0
     #fillNa for cabin
     train_data["Cabin"].fillna(train_data.groupby("Pclass")["Cabin"].transform("median"), inplace=True)
     test_data["Cabin"].fillna(test_data.groupby("Pclass")["Cabin"].transform("median"), inplace=True)
@@ -53,7 +67,7 @@ def data_wrangling(train_data, test_data):
     return train_data, test_data
 
 def features(train_data, test_data):
-    feat_names = ["Pclass", "Sex","AgeBin", "FareBin", "Embarked", "FamilySize", "Cabin"]
+    feat_names = ["Pclass", "Sex","AgeBin", "FareBin", "Embarked", "FamilySize", "Cabin", "FamilyWiped", "FamilySurvived"]
     y = train_data["Survived"]
     #turn into categorical data
     X = pd.get_dummies(train_data[feat_names])
@@ -69,8 +83,8 @@ def fit(X, y):
     # feat_names = ["Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked", "Child"]
     # tree.export_graphviz(model, feature_names=feat_names, out_file="../plots/dt.dot")
 
-    #scores = model_selection.cross_val_score(model, X, y, scoring='accuracy', cv=50)
-    #print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
+    scores = model_selection.cross_val_score(model, X, y, scoring='accuracy', cv=50)
+    print("Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
     return model
 
 def create_submission_file(model, X_test, test_data):
