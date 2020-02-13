@@ -29,6 +29,16 @@
         <br><br><br>
         <img src="plots/GenderInformation.png" alt="Gender information plot">
         <h3>Prediction</h3>
+        <p>Starting from the <a href="https://www.kaggle.com/alexisbcook/titanic-tutorial"> titanic tutorial</a> we start with a RandomForestClassifier. The first thing I did was clean up some of the data (get rid of NaN values) and add columns such as "FamilySize" and "Child".
+        Adding these slightly improves the accuracy of the classifier, but not by much yet. Using a support vector machine allows a bit more of an improvement, but I still have to play around with different kernels to see what works best on this problem.
+        The main thing I learned in this project is the importance of data wrangling and feature engineering. As far as I know now, Machine Learning is not just apply multiple algorithms to a dataset and seeing which one works best. Rather, you need to have
+        some understanding of the problem in order to solve the problem. Basically, you still need to think about the problem. A couple more things that I can try: </p>
+        <ul>
+            <li>distribute the missing cabin values according to their distribution per passenger class (instead of using the median value per class)</li>
+            <li>add a column "FamilySurvived" (equal to 1 if a family has at least (2 or) 3 surviving members)</li>
+            <li>add a column "AtLeastOneSurvived" (equal to 1 if at least 1 member of the family survived)</li>
+            <li>do some hyperparameter tuning on RandomForests</li>
+        </ul>
 
     </div>
 </div>
